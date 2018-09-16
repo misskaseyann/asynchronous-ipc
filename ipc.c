@@ -1,0 +1,40 @@
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <unistd.h> 
+
+/* 
+ * Communicating Processes
+ * Lab 3 Programming Assignment
+ *
+ * By Kasey Stowell and Kehlsey Lewis
+ *
+ * Experiment with asynchronous IPC with a program that
+ * demonstrates the use of signals for simple communication.
+ * 
+ */
+int main() {
+	pid_t pid;
+	// TODO: install signal handler(s) for the user-defined signals (SIGUSR1/SIGUSR2)
+
+	// spawn off a child process
+	if ((pid = fork()) < 0) {
+		perror("fork failed");
+		exit(1);
+	}
+	// child process
+	else if (!pid) {
+		//while(1) {
+			int random = 3; // TODO make random
+			sleep(random);
+			printf("heyyy");
+			// TODO: randomly send one of the two user-defined signals to its parent
+		//}
+		exit(0); // temp to prevent background process
+	}
+	printf("spawned child PID# %d\n", pid);
+	// TODO: when a user-defined signal is raised, it reports the type of signal sent
+	// note: may be necessary to reinstall your signal handler after a signal is received
+	
+	// TODO: terminates gracefully upon receiving a control-c
+	exit(0); // temp
+}
