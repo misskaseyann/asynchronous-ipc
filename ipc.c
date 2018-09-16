@@ -19,7 +19,7 @@ void sigUsrHandler(int);
 int main() {
 
 	pid_t pid;
-	
+
 	// Install signal handler(s) for the user-defined signals (SIGUSR1/SIGUSR2).
 	signal(SIGINT, sigIntHandler);
 	signal(SIGUSR1, sigUsrHandler);
@@ -51,14 +51,10 @@ int main() {
 
 // TODO: terminates gracefully upon receiving a control-c
 void sigIntHandler(int signNum) {
-	printf("Control-c registered. Exiting...");
-	sleep(1);
-	printf("Bye!");
+	printf("Control-c registered. Exiting...\n");
 	exit(0);
 }
 // TODO: finish handler for siguser calls.
 void sigUsrHandler(int signNum) {
 	printf("User signal registered....");
-	sleep(1);
-	printf("Keep doing your thing...");
 }
