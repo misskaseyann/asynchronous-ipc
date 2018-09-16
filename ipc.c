@@ -27,17 +27,19 @@ int main() {
 		perror("fork failed");
 		exit(1);
 	}
+
 	// child process
 	else if (!pid) {
 		while(1) {
 			int random = 3; // TODO make random
 			sleep(random);
-			printf("heyyy");
 			// TODO: randomly send one of the two user-defined signals to its parent
 		}
 	}
 	printf("spawned child PID# %d\n", pid);
-	pause();
+
+	pause(); // debug purposes only to make sure sig int handler works.
+
 	// TODO: when a user-defined signal is raised, it reports the type of signal sent
 	// note: may be necessary to reinstall your signal handler after a signal is received
 	
