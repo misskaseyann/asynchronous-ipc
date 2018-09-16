@@ -17,10 +17,13 @@ void sigUsrHandler(int);
  * 
  */
 int main() {
-	pid_t pid;
 
-	// TODO: install signal handler(s) for the user-defined signals (SIGUSR1/SIGUSR2)
+	pid_t pid;
+	
+	// Install signal handler(s) for the user-defined signals (SIGUSR1/SIGUSR2).
 	signal(SIGINT, sigIntHandler);
+	signal(SIGUSR1, sigUsrHandler);
+	signal(SIGUSR2, sigUsrHandler); // not sure if we need seperate handlers?
 
 	// spawn off a child process
 	if ((pid = fork()) < 0) {
