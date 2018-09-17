@@ -2,8 +2,8 @@
 #include <stdlib.h> 
 #include <unistd.h> 
 #include <signal.h>
+#include <sys/wait.h>
 
-void sigIntHandler(int);
 void sigUsrHandler(int);
 
 /* 
@@ -18,12 +18,21 @@ void sigUsrHandler(int);
  */
 int main() {
 
-	pid_t pid;
+	pid_t pid, ppid;
+	int status;
 
 	// Install signal handler(s) for the user-defined signals (SIGUSR1/SIGUSR2).
-	signal(SIGINT, sigIntHandler);
+	signal(SIGINT, sigUsrHandler);
 	signal(SIGUSR1, sigUsrHandler);
-	signal(SIGUSR2, sigUsrHandler); // not sure if we need seperate handlers?
+	signal(SIGUSR2, sigUsrHandler); //only need one handler for all
+
+	//vector holding the signals for random choosing
+	int signals[2] = {SIGUSR1, SIGUSR2};
+
+	//intro cat logo
+	printf("\n  /\\___/\\\n ( o   o )\n (  =^=  ) \n (        )\n (         )\n (          )))))))))))\n\n");
+	printf("~* Welcome to tinyshell by kehlsey & kasey!\n");
+	printf("~* To quit please use ctrl + c or forever be stuck looping in tinyshell. \n\n");
 
 	// spawn off a child process
 	if ((pid = fork()) < 0) {
@@ -33,28 +42,40 @@ int main() {
 
 	// child process
 	else if (!pid) {
+
+		ppid = getppid(); //gettting parent id
+
 		while(1) {
-			int random = 3; // TODO make random
+			int random = rand() % (5 + 1 - 1) + 1; //generating a random number to sleep
+		
 			sleep(random);
-			// TODO: randomly send one of the two user-defined signals to its parent
+			printf("\ntinyshell slept for %d seconds...\n", random);	
+
+			int chosen = signals[rand()%2];
+			kill(ppid,chosen); //sends SIGUSR1 or SIGUSR2 signal to parent 
 		}
 	}
-	printf("spawned child PID# %d\n", pid);
 
-	pause(); // debug purposes only to make sure sig int handler works.
-
-	// TODO: when a user-defined signal is raised, it reports the type of signal sent
-	// note: may be necessary to reinstall your signal handler after a signal is received
+	printf("tinyshell spawned child PID# %d\n", pid);
+	waitpid(-1, &status, 0); //waiting for child process
 	
 	return 0; // temp
 }
 
-// TODO: terminates gracefully upon receiving a control-c
-void sigIntHandler(int signNum) {
-	printf("Control-c registered. Exiting...\n");
-	exit(0);
-}
-// TODO: finish handler for siguser calls.
-void sigUsrHandler(int signNum) {
-	printf("User signal registered....");
+void sigUsrHandler(int signNum) { 
+
+	//terminates when control c recieved
+	if (signNum == SIGINT){
+		printf("Control-c registered. Exiting...\n");
+		exit(0);
+	}
+
+	else if (signNum == SIGUSR1) {
+		printf("Recieved a SIGUSR1 signal\n");
+	}
+
+	else {
+		printf("Recieved a SIGUSR2 signal\n");
+	}
+
 }
