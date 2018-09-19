@@ -3,13 +3,14 @@
 #include <unistd.h> 
 #include <signal.h>
 #include <sys/wait.h>
+#include <time.h>
 
 void sigUsrHandler(int);
 void sigChildHandler(int);
 
 /* 
  * Communicating Processes
- * Lab 3 Programming Assignment
+ * Lab 3 Programming Assignment Extra Credit
  *
  * Authors: Kasey Stowell and Kehlsey Lewis
  * Version: Fall 2018
@@ -20,13 +21,17 @@ void sigChildHandler(int);
  */
 int main() {
 
-	pid_t pid, ppid;
+	pid_t pid, pid2, ppid;
 	int status;
 
+	struct sigaction sact;
+	sact.sa_handler = sigUsrHandler;
+	sact.sa_flags = SA_RESTART;
+
 	// Install signal handler(s) for the user-defined signals (SIGUSR1/SIGUSR2).
-	signal(SIGINT, sigUsrHandler);
-	signal(SIGUSR1, sigUsrHandler);
-	signal(SIGUSR2, sigUsrHandler);
+	sigaction(SIGINT, &sact, NULL);
+	sigaction(SIGUSR1, &sact, NULL);
+	sigaction(SIGUSR2, &sact, NULL);
 
 	// Vector holding the signals for random choosing.
 	int signals[2] = {SIGUSR1, SIGUSR2};
@@ -36,31 +41,40 @@ int main() {
 	printf("~* Welcome to our experiment with asynchronous IPC by kehlsey & kasey!\n");
 	printf("~* To quit please use ctrl + c or forever be stuck looping. \n\n");
 
-	// Spawn off a child process.
-	if ((pid = fork()) < 0) {
-		perror("fork failed");
-		exit(1);
-	}
-
-	// Child process.
-	else if (!pid) {
-		signal(SIGINT, sigChildHandler);
-
-		ppid = getppid(); // gettting parent id
-
+	if ((pid = fork()) != 0) {
+		// i am the parent
+		printf("parent spawned child PID# %d\n", pid);
+		if ((pid2 = fork()) != 0) {
+			// i am still the parent
+			printf("parent spawned child PID# %d\nwaiting... ", pid2);
+			fflush(stdout);
+			waitpid(-1, &status, 0); // waiting for child process
+		} else {
+			//child2
+			ppid = getppid();
+			sact.sa_handler = sigChildHandler;
+			sigaction(SIGINT, &sact, NULL);
+			srand(getpid()+ time(0));
+			while(1) {
+				int random = rand() % (5 + 1 - 1) + 1; // generating a random number to sleep
+				sleep(random);	
+				int chosen = signals[rand()%2];
+				kill(ppid,chosen); // sends SIGUSR1 or SIGUSR2 signal to parent 
+			}
+		}
+	} else {
+		//child 1
+		ppid = getppid();
+		sact.sa_handler = sigChildHandler;
+		sigaction(SIGINT, &sact, NULL);
+		srand(getpid()+ time(0));
 		while(1) {
 			int random = rand() % (5 + 1 - 1) + 1; // generating a random number to sleep
 			sleep(random);	
 			int chosen = signals[rand()%2];
 			kill(ppid,chosen); // sends SIGUSR1 or SIGUSR2 signal to parent 
 		}
-
-	} 
-
-	printf("parent spawned child PID# %d\nwaiting... ", pid);
-	fflush(stdout);
-	waitpid(-1, &status, 0); // waiting for child process
-
+	}
 	return 0;
 }
 
