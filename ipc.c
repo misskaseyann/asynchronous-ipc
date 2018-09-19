@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 
 void sigUsrHandler(int);
+void sigChildHandler(int);
 
 /* 
  * Communicating Processes
@@ -42,6 +43,7 @@ int main() {
 
 	// Child process.
 	else if (!pid) {
+		signal(SIGINT, sigChildHandler);
 
 		ppid = getppid(); // gettting parent id
 
@@ -63,7 +65,6 @@ int main() {
 
 /* Handles SIGINT, SIGUSR1, and SIGUSR2 signals. */
 void sigUsrHandler(int signNum) { 
-
 	// Terminates when control c recieved.
 	if (signNum == SIGINT) {
 		fflush(stdout);
@@ -78,4 +79,9 @@ void sigUsrHandler(int signNum) {
 		printf("Recieved a SIGUSR2 signal\nwaiting... ");
 	}
 	fflush(stdout);
+}
+
+/* Handles SIGINT for the child only. */
+void sigChildHandler(int sigNum) {
+	exit(0);
 }
